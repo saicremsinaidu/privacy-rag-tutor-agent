@@ -1,5 +1,5 @@
 # 📘 **CS5342 — Network Security Project**
-## **Round-2 Prototype Submission — README**
+
 ### **Local Network-Security Tutor & Quiz Agent (Privacy-Preserving)**
 
 ---
