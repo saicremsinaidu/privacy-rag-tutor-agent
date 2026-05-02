@@ -1,268 +1,163 @@
-# 📘 **CS5342 — Network Security Project**
+# Privacy-Preserving RAG Tutor & Quiz Agent
 
-### **Local Network-Security Tutor & Quiz Agent (Privacy-Preserving)**
-
----
-
-# 🔥 **1. Project Statement**
-
-Network security courses include hundreds of pages of slides, textbook content, and quizzes. Manually searching these documents is time-consuming, and using online LLMs (ChatGPT, Gemini) violates **data privacy requirements** because documents cannot be uploaded to the cloud.
-
-To solve this, we built a **local, privacy-preserving AI Tutor & Quiz Generator** that:
-
-- Runs fully **offline**
-- Processes **local network security documents only**
-- Answers questions with **document-level citations**
-- Generates **MCQs, True/False, and Open-ended quizzes**
-- Provides **auto-grading & feedback**
-- Protects student data using a **local vector database + local LLM**
-
-This meets **all Round-2 CS5342 project requirements**.
+A fully offline, privacy-first AI assistant that answers questions and generates quizzes from local documents — no cloud, no data leakage, no GPU required.
 
 ---
 
-# 🧠 **2. Project Description**
+## What It Does
 
-Our system has **two core agents**:
+Most AI tutoring tools send your documents to the cloud (ChatGPT, Gemini, etc.), creating data privacy risks. This system runs entirely locally using a local LLM and a local vector database, making it safe for sensitive or proprietary documents.
 
-### **1️⃣ Q&A Tutor Agent**
-- Takes any network-security question  
-- Converts the question into embeddings  
-- Retrieves relevant document chunks from Qdrant  
-- Generates a response using GPT4All  
-- Displays **citation (document + page number)**  
-- Works 100% offline  
+**Two core agents:**
 
-### **2️⃣ Quiz Agent**
-- Generates **topic-specific quizzes**  
-- Generates **random quizzes**  
-- Supports:
-  - MCQs  
-  - True/False  
-  - Open-ended questions  
-- Grades user answers using similarity scoring (FuzzyWuzzy)  
-- Provides feedback + correct answers + citations  
+**Q&A Tutor Agent**
+- Accepts any natural language question
+- Converts it into embeddings and retrieves relevant document chunks from Qdrant
+- Generates a cited, grounded answer using GPT4All (offline LLM)
+- Returns document name + page number with every response
+
+**Quiz Agent**
+- Generates topic-specific or random quizzes from your documents
+- Supports MCQ, True/False, and open-ended question formats
+- Auto-grades answers using fuzzy similarity scoring
+- Returns feedback, correct answers, and source citations
 
 ---
 
-# 🖥️ **3. System Environment**
+## Tech Stack
 
-### **Operating Systems**
-- macOS  
-- Windows  
-- Linux  
-
-### **Python Version**
-- Python **3.9 or above**
-
-### **Hardware Requirements**
-- 8GB RAM minimum  
-- CPU-only supported (no GPU required)
+| Layer | Technology |
+|---|---|
+| Language | Python 3.9+ |
+| LLM (offline) | GPT4All |
+| Embeddings | sentence-transformers (`all-MiniLM-L12-v2`) |
+| Vector Database | Qdrant (Docker) |
+| PDF Parsing | PyMuPDF (fitz) |
+| Answer Grading | FuzzyWuzzy + python-Levenshtein |
+| Web UI | Gradio |
 
 ---
 
-# 📦 **4. Adopted Libraries**
+## System Requirements
 
-| Library | Purpose |
-|--------|---------|
-| **sentence-transformers** | Creates embeddings for text |
-| **qdrant-client** | Vector database connection |
-| **gradio** | Web-based UI |
-| **gpt4all** | Lightweight offline LLM |
-| **pymupdf (fitz)** | Extract text from PDF documents |
-| **fuzzywuzzy** | Similarity scoring for grading |
-| **python-Levenshtein** | Enhances fuzzy matching speed |
+- Python 3.9 or above
+- Docker (for Qdrant)
+- 8GB RAM minimum
+- CPU-only — no GPU required
 
-Install all dependencies:
+---
 
-```
-pip install fuzzywuzzy python-Levenshtein sentence-transformers qdrant-client gradio gpt4all pymupdf
+## Quick Start
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/your-username/privacy-rag-tutor-agent.git
+cd privacy-rag-tutor-agent
 ```
 
----
+### 2. Set up virtual environment
 
-# 🐳 **5. Qdrant Setup (Vector Database)**
-
-Start Qdrant locally using Docker:
-
-```
-docker pull qdrant/qdrant
-docker run -p 6333:6333 qdrant/qdrant
-```
-
----
-
-# 🔧 **6. Virtual Environment Setup**
-
-### **macOS/Linux**
-```
+```bash
+# macOS / Linux
 python3 -m venv venv
 source venv/bin/activate
-```
 
-### **Windows**
-```
+# Windows
 python -m venv venv
 venv\Scripts\activate
 ```
 
-If PowerShell gives permission error:
-```
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+> If PowerShell throws a permission error on Windows:
+> `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
----
+### 3. Install dependencies
 
-# 📁 **7. Project Structure**
-
-```
-project/
-│── Scripts/
-│   ├── initialise_qdrant.py
-│   ├── Data_insertion_qdrant.py
-│   ├── chatbot_application.py
-│── knowledge_base/
-│   ├── (lecture slides, textbook pages, quizzes)
-│── README.md
-│── requirements.txt (optional)
-│── venv/ (ignored)
+```bash
+pip install fuzzywuzzy python-Levenshtein sentence-transformers qdrant-client gradio gpt4all pymupdf
 ```
 
----
+### 4. Start Qdrant (vector database)
 
-# 📚 **8. Training Data & Data Format**
-
-### **Knowledge Documents**
-Stored in:
-
-```
-knowledge_base/
+```bash
+docker pull qdrant/qdrant
+docker run -p 6333:6333 qdrant/qdrant
 ```
 
-Includes:
-- CS5342 lecture slides  
-- Textbook pages  
-- Quizzes  
-- Any additional network-security PDFs  
+### 5. Add your documents
 
-### **Chunking Method**
-- PDFs extracted using **PyMuPDF**  
-- Each page converted to text  
-- Text split into chunks of ~500–700 characters  
+Place any PDF files into the `knowledge_base/` folder.
 
-### **Embedding Model**
-- `all-MiniLM-L12-v2`  
-- Embedding vector size: **384**  
-- Distance metric: **cosine similarity**
+### 6. Initialize and populate the database
 
-### **Qdrant Collection Structure**
-
-Each entry contains:
-- `text`  
-- `document_name`  
-- `page_number`  
-- `embedding` vector  
-
----
-
-# 🔄 **9. Execution Flow**
-
-### **Step 1 — Initialize Database**
-```
+```bash
 python Scripts/initialise_qdrant.py
-```
-
-### **Step 2 — Add PDFs**
-Place all documents into:
-```
-knowledge_base/
-```
-
-### **Step 3 — Insert Data into Qdrant**
-```
 python Scripts/Data_insertion_qdrant.py
 ```
 
-### **Step 4 — Launch the Tutor/Quiz Bot**
-```
+### 7. Launch the app
+
+```bash
 python Scripts/chatbot_application.py
 ```
 
-### **Step 5 — Access Web UI**
-Visit:
+Open your browser at: `http://127.0.0.1:7860`
+
+---
+
+## Project Structure
+
 ```
-http://127.0.0.1:7860
+project/
+├── Scripts/
+│   ├── initialise_qdrant.py       # Creates Qdrant collection
+│   ├── Data_insertion_qdrant.py   # Embeds and stores PDF chunks
+│   └── chatbot_application.py     # Launches Gradio UI with both agents
+├── knowledge_base/
+│   └── (place your PDF documents here)
+├── README.md
+└── requirements.txt
 ```
 
 ---
 
-# 🧱 **10. System Architecture Diagram**
+## How It Works
+
+1. PDFs are extracted page-by-page using PyMuPDF
+2. Each page is chunked into ~500–700 character segments
+3. Chunks are embedded using `all-MiniLM-L12-v2` (384-dim vectors, cosine similarity)
+4. Embeddings are stored in a local Qdrant collection with metadata: `text`, `document_name`, `page_number`
+5. At query time, the question is embedded and the top-k most relevant chunks are retrieved
+6. GPT4All generates a response grounded in the retrieved context, with citations
+
+---
+
+## Architecture
 
 ![System Architecture](image.png)
 
 ---
 
-# 🤖 **11. Core Features**
+## Troubleshooting
 
-### ✔ Q&A Tutor Agent  
-### ✔ Quiz Agent  
-### ✔ Offline, Privacy-Preserving  
-### ✔ Auto-Grading  
-### ✔ Citations Included  
-
----
-
-# 🐞 **12. Issues & Solutions**
-
-### **Issue — Qdrant not running**
-Fix: Restart Docker.
-
-### **Issue — PyMuPDF error**
-Fix:
-```
-pip install pymupdf
-```
-
-### **Issue — venv not activating**
-Fix:
-```
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+| Issue | Fix |
+|---|---|
+| Qdrant not connecting | Restart Docker: `docker run -p 6333:6333 qdrant/qdrant` |
+| PyMuPDF import error | `pip install pymupdf` |
+| venv not activating on Windows | `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` |
 
 ---
 
-# 💡 **13. Suggestions & Feedback**
+## Roadmap
 
-- Add Wireshark-based analysis for bonus  
-- Improve user interface  
-- Add dark mode  
-- Add exportable reports  
-
----
-
-# 🧾 **14. Commands Summary**
-
-```
-docker pull qdrant/qdrant
-docker run -p 6333:6333 qdrant/qdrant
-
-python -m venv venv
-source venv/bin/activate
-venv\Scripts\activate
-
-pip install fuzzywuzzy python-Levenshtein sentence-transformers qdrant-client gradio gpt4all pymupdf
-
-python Scripts/initialise_qdrant.py
-python Scripts/Data_insertion_qdrant.py
-python Scripts/chatbot_application.py
-```
+- [ ] Support for additional document formats (DOCX, TXT, HTML)
+- [ ] Exportable quiz reports (PDF)
+- [ ] Dark mode UI
+- [ ] Swap GPT4All for other local models (Ollama, LlamaCpp)
+- [ ] Metadata filtering (query by document or topic)
 
 ---
 
-# 📚 **15. References**
+## License
 
-1. TechTalks — Private ChatGPT  
-2. CommandBar Blog — LangChain  
-3. GPT4All Documentation  
-4. Qdrant Documentation  
-5. RAG & Agent-Based Tutorials  
+MIT
